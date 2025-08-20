@@ -1,21 +1,4 @@
-# PlatformIO
-.pio/
-/firmware.bin
-/build/
 
-# IDE files
-.vscode/
-.history
-.DS_Store
+.pio
 
-# Common generated files
-*.o
-*.exe
-*.bin
-*.elf
-*.hex
-
-# User-specific settings
-.vscode/c_cpp_properties.json
-.vscode/settings.json
-.vscode/tasks.json
+.vscode

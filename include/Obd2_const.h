@@ -1,0 +1,10 @@
+// Khai báo các PID OBD-II
+#define MODE_1_VEHICLE_SPEED 0x0D
+#define MODE_1_ENGINE_RPM 0x0C
+#define MODE_1_ENGINE_COOL_TEMP 0x05
+#define MODE_1_THROTTLE_POSITION 0x11
+#define MODE_1_FUEL_LEVEL 0x2F
+#define MODE_1_ENGINE_LOAD 0x04
+#define CAN_ID_PID 0x7DF
+
+#define MAX_PID_COUNT 6 // Số lượng PID tối đa

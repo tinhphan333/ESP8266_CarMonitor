@@ -65,84 +65,89 @@ OBD2_Status_t Send_task(void)
     }
 }
 
-static void DecodeData(unsigned char *buf)
+static OBD2_Status_t DecodeData(unsigned char *buf)
 {
+    // Kiểm tra mã PID tương ứng để giải mã dữ liệu
     switch (buf[2]) // buf[2]: chứa mã PID
     {
     case MODE_1_VEHICLE_SPEED:
     {
+        // Tính toán tốc độ xe và gửi dữ liệu lên Firebase
         int vehicle_speed = buf[3];
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/vehicle_speed", vehicle_speed))
-            ;
-        {
-            Serial.println("vehicle_speed: " + String(vehicle_speed));
-        }
+            return OBD2_OK;
     }
-    break;
     case MODE_1_ENGINE_RPM:
     {
+        // Tính toán tốc độ động cơ và gửi dữ liệu lên Firebase
         int data_1 = buf[3];
         int data_2 = buf[4];
         int engine_speed = (data_1 * 256 + data_2) / 4;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/engine_speed", engine_speed))
-            ;
-        //{  Serial.println("engine_speed: " + String(engine_speed));  }
+            return OBD2_OK;
     }
-    break;
     case MODE_1_ENGINE_COOL_TEMP:
     {
+        // Tính toán nhiệt độ nước làm mát và gửi dữ liệu lên Firebase
         int engine_coolant_temperature = buf[3] - 40;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/engine_coolant_temperature", engine_coolant_temperature))
-            ;
-        //{ Serial.println("engine_coolant_temperature: " + String(engine_coolant_temperature)); }
+            return OBD2_OK;
     }
-    break;
     case MODE_1_THROTTLE_POSITION:
     {
+        // Tính toán vị trí bướm ga và gửi dữ liệu lên Firebase
         int throttle_position = buf[3] * 0.392156;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/throttle_position", throttle_position))
-            ;
-        //{ Serial.println("throttle_position: " + String(throttle_position));  }
+            return OBD2_OK;
     }
-    break;
     case MODE_1_FUEL_LEVEL:
     {
+        // Tính toán mức nhiên liệu và gửi dữ liệu lên Firebase
         int fuel_level = buf[3] * 0.392156;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/fuel_level", fuel_level))
-            ;
-        //{ Serial.println("fuel_level: " + String(fuel_level)); }
+            return OBD2_OK;
     }
-    break;
     case MODE_1_ENGINE_LOAD:
     {
+        // Tính toán tải động cơ và gửi dữ liệu lên Firebase
         int engine_load = buf[3] * 0.392156;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/engine_load", engine_load))
-            ;
-        //{ Serial.println("engine_load: " + String(engine_load)); }
+            return OBD2_OK;
     }
-    break;
     }
 }
 
-void taskCanRecv()
+OBD2_Status_t Receive_task(void)
 {
+    // Khai báo buffer để nhận tin nhắn OBD2
     unsigned char len = 0;
     unsigned char buf[8];
 
+    // Kiểm tra nếu có tin nhắn từ mạng CAN
     if (CAN_MSGAVAIL == CAN.checkReceive())
-    {                              // check if get data
-        CAN.readMsgBuf(&len, buf); // read data,  len: data length, buf: data buf
+    {
+        CAN.readMsgBuf(&len, buf); // đọc tin nhắn từ mạng CAN
 
+        // In thông tin tin nhắn nhận được lên Serial Monitor
         Serial.println("\r\n------------------------------------------------------------------");
         Serial.print("Get Data From id: 0x");
         Serial.println(CAN.getCanId(), HEX);
         for (int i = 0; i < len; i++)
-        { // print the data
+        {
             Serial.print("0x");
             Serial.print(buf[i], HEX);
             Serial.print("\t");
         }
         Serial.println();
+
+        // Giải mã dữ liệu nhận được và tải dữ liệu lên firebase
+        return DecodeData(buf);
     }
-    DecodeData(buf);
+    else
+    {
+        // Nếu không có tin nhắn nào, in thông báo
+        Serial.println("No data received");
+        Serial.println("No data received");
+        return OBD2_ERR;
+    }
 }

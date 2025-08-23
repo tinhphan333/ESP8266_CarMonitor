@@ -8,3 +8,4 @@
 #define CAN_ID_PID 0x7DF
 
 #define MAX_PID_COUNT 6 // Số lượng PID tối đa
+

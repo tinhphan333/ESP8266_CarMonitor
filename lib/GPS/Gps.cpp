@@ -7,7 +7,7 @@
  */
 #include "GPS.h"
 
-String LocationProcess(String &LocationString)
+String LocationProcess(TinyGPSPlus &gps, String &LocationString)
 {
     // Nhận dữ liệu vị trí
     if (gps.location.isValid())
@@ -29,7 +29,7 @@ String LocationProcess(String &LocationString)
     return LocationString;
 }
 
-String DateProcess(String &DateString)
+String DateProcess(TinyGPSPlus &gps, String &DateString)
 {
     // Nhận dữ liệu ngày tháng năm
     if (gps.date.isValid())
@@ -55,7 +55,7 @@ String DateProcess(String &DateString)
     return DateString;
 }
 
-String TimeProcess(String &TimeString)
+String TimeProcess(TinyGPSPlus &gps, String &TimeString)
 {
     // Nhận dữ liệu thời gian
     if (gps.time.isValid())

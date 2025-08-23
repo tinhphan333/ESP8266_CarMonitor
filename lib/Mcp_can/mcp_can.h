@@ -49,6 +49,10 @@
 
 #include "mcp_can_dfs.h"
 
+#include <Arduino.h>
+#include <SPI.h>
+#include <inttypes.h>
+
 #define MAX_CHAR_IN_MESSAGE 8
 
 class MCP_CAN

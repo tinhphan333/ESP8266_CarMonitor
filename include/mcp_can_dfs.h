@@ -48,10 +48,6 @@
 #ifndef _MCP2515DFS_H_
 #define _MCP2515DFS_H_
 
-#include <Arduino.h>
-#include <SPI.h>
-#include <inttypes.h>
-
 // if print debug information
 #define DEBUG_EN 0
 

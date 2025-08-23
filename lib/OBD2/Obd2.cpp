@@ -8,19 +8,7 @@
 
 #include "Obd2.h"
 
-void set_mask_filt()
-{
-    CAN.init_Mask(0, 0, 0x7FC);
-    CAN.init_Mask(1, 0, 0x7FC);
-    CAN.init_Filt(0, 0, 0x7E8);
-    CAN.init_Filt(1, 0, 0x7E8);
-    CAN.init_Filt(2, 0, 0x7E8);
-    CAN.init_Filt(3, 0, 0x7E8);
-    CAN.init_Filt(4, 0, 0x7E8);
-    CAN.init_Filt(5, 0, 0x7E8);
-}
-
-static OBD2_Status_t sendPid(unsigned char __pid)
+static OBD2_Status_t sendPid(MCP_CAN &CAN, unsigned char __pid)
 {
     unsigned char tmp[8] = {0x02, 0x01, __pid, 0, 0, 0, 0, 0}; // Tạo khung OBD-II để yêu cầu dữ liệu
 
@@ -38,7 +26,7 @@ static OBD2_Status_t sendPid(unsigned char __pid)
     }
 }
 
-OBD2_Status_t Send_task(void)
+OBD2_Status_t Send_task(MCP_CAN &CAN)
 {
     static int count = 0; // Khai báo biến đếm lần lượt gửi các mã PID
     count++;
@@ -51,32 +39,56 @@ OBD2_Status_t Send_task(void)
     switch (count)
     {
     case 1:
-        return sendPid(MODE_1_VEHICLE_SPEED); // Gửi mã PID yêu cầu giá trị tốc độ xe
+        if (sendPid(CAN, MODE_1_VEHICLE_SPEED) == OBD2_OK) // Gửi mã PID yêu cầu giá trị tốc độ xe
+            return OBD2_OK;
+        else
+            return OBD2_ERR;
     case 2:
-        return sendPid(MODE_1_ENGINE_RPM); // Gửi mã PID yêu cầu giá trị tốc độ động cơ
+        if (sendPid(CAN, MODE_1_ENGINE_RPM) == OBD2_OK) // Gửi mã PID yêu cầu giá trị tốc độ động cơ
+            return OBD2_OK;
+        else
+            return OBD2_ERR;
     case 3:
-        return sendPid(MODE_1_ENGINE_COOL_TEMP); // Gửi mã PID yêu cầu giá trị nhiệt độ nước làm mát
+        if (sendPid(CAN, MODE_1_ENGINE_COOL_TEMP) == OBD2_OK) // Gửi mã PID yêu cầu giá trị nhiệt độ nước làm mát
+            return OBD2_OK;
+        else
+            return OBD2_ERR;
     case 4:
-        return sendPid(MODE_1_THROTTLE_POSITION); // Gửi mã PID yêu cầu giá trị độ mở bướm ga
+        if (sendPid(CAN, MODE_1_THROTTLE_POSITION) == OBD2_OK) // Gửi mã PID yêu cầu giá trị vị trí bướm ga
+            return OBD2_OK;
+        else
+            return OBD2_ERR;
     case 5:
-        return sendPid(MODE_1_FUEL_LEVEL); // Gửi mã PID yêu cầu giá trị mức nhiên liệu
+        if (sendPid(CAN, MODE_1_FUEL_LEVEL) == OBD2_OK) // Gửi mã PID yêu cầu giá trị mức nhiên liệu
+            return OBD2_OK;
+        else
+            return OBD2_ERR;
     case 6:
-        return sendPid(MODE_1_ENGINE_LOAD); // Gửi mã PID yêu cầu giá trị tải động cơ
+        if (sendPid(CAN, MODE_1_ENGINE_LOAD) == OBD2_OK) // Gửi mã PID yêu cầu giá trị tải động cơ
+            return OBD2_OK;
+        else
+            return OBD2_ERR;
+    default:
+        return OBD2_ERR; // Trả về lỗi nếu không có PID hợp lệ
     }
 }
 
-static OBD2_Status_t DecodeData(unsigned char *buf)
+static OBD2_Status_t DecodeData(FirebaseData &firebaseData, unsigned char *buf)
 {
     // Kiểm tra mã PID tương ứng để giải mã dữ liệu
     switch (buf[2]) // buf[2]: chứa mã PID
     {
+
     case MODE_1_VEHICLE_SPEED:
     {
         // Tính toán tốc độ xe và gửi dữ liệu lên Firebase
         int vehicle_speed = buf[3];
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/vehicle_speed", vehicle_speed))
             return OBD2_OK;
+        else
+            return OBD2_ERR;
     }
+
     case MODE_1_ENGINE_RPM:
     {
         // Tính toán tốc độ động cơ và gửi dữ liệu lên Firebase
@@ -85,39 +97,56 @@ static OBD2_Status_t DecodeData(unsigned char *buf)
         int engine_speed = (data_1 * 256 + data_2) / 4;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/engine_speed", engine_speed))
             return OBD2_OK;
+        else
+            return OBD2_ERR;
     }
+
     case MODE_1_ENGINE_COOL_TEMP:
     {
         // Tính toán nhiệt độ nước làm mát và gửi dữ liệu lên Firebase
         int engine_coolant_temperature = buf[3] - 40;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/engine_coolant_temperature", engine_coolant_temperature))
             return OBD2_OK;
+        else
+            return OBD2_ERR;
     }
+
     case MODE_1_THROTTLE_POSITION:
     {
         // Tính toán vị trí bướm ga và gửi dữ liệu lên Firebase
         int throttle_position = buf[3] * 0.392156;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/throttle_position", throttle_position))
             return OBD2_OK;
+        else
+            return OBD2_ERR;
     }
+
     case MODE_1_FUEL_LEVEL:
     {
         // Tính toán mức nhiên liệu và gửi dữ liệu lên Firebase
         int fuel_level = buf[3] * 0.392156;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/fuel_level", fuel_level))
             return OBD2_OK;
+        else
+            return OBD2_ERR;
     }
+
     case MODE_1_ENGINE_LOAD:
     {
         // Tính toán tải động cơ và gửi dữ liệu lên Firebase
         int engine_load = buf[3] * 0.392156;
         if (Firebase.setInt(firebaseData, "/DATN/Xe 1/engine_load", engine_load))
             return OBD2_OK;
+        else
+            return OBD2_ERR;
     }
+
+    default:
+        return OBD2_ERR; // Trả về lỗi nếu mã PID không hợp lệ
     }
 }
 
-OBD2_Status_t Receive_task(void)
+OBD2_Status_t Receive_task(FirebaseData &firebaseData, MCP_CAN &CAN)
 {
     // Khai báo buffer để nhận tin nhắn OBD2
     unsigned char len = 0;
@@ -141,13 +170,15 @@ OBD2_Status_t Receive_task(void)
         Serial.println();
 
         // Giải mã dữ liệu nhận được và tải dữ liệu lên firebase
-        return DecodeData(buf);
+        if (DecodeData(firebaseData, buf) == OBD2_OK)
+        {
+            return OBD2_OK;
+        }
+        else
+        {
+            // Nếu không có tin nhắn nào, in thông báo
+            return OBD2_ERR;
+        }
     }
-    else
-    {
-        // Nếu không có tin nhắn nào, in thông báo
-        Serial.println("No data received");
-        Serial.println("No data received");
-        return OBD2_ERR;
-    }
+    return OBD2_ERR;
 }

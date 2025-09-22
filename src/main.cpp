@@ -97,6 +97,7 @@ void setup()
 void loop()
 {
   Send_task(CAN);
+  delay(20); // thời gian trễ giữa các lần gửi và nhận dữ liệu CAN
   Receive_task(firebaseData, CAN);
   GPS_task();
 }

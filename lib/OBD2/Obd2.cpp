@@ -30,11 +30,6 @@ OBD2_Status_t Send_task(MCP_CAN &CAN)
 {
     static int count = 0; // Khai báo biến đếm lần lượt gửi các mã PID
     count++;
-    // Kiểm tra xem đã gửi hết các PID chưa
-    if (count > MAX_PID_COUNT)
-    {
-        count = 0; // Nếu đã gửi hết thì reset lại biến đếm
-    }
 
     switch (count)
     {
@@ -69,6 +64,11 @@ OBD2_Status_t Send_task(MCP_CAN &CAN)
         else
             return OBD2_ERR;
     default:
+        // Kiểm tra xem đã gửi hết các PID chưa
+        if (count > MAX_PID_COUNT)
+        {
+            count = 0; // Nếu đã gửi hết thì reset lại biến đếm
+        }
         return OBD2_ERR; // Trả về lỗi nếu không có PID hợp lệ
     }
 }

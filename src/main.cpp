@@ -99,7 +99,7 @@ void loop()
   while (1) // Vòng lặp chính
   {
     Send_task(CAN);
-    delay(10); // thời gian trễ giữa các lần gửi và nhận dữ liệu CAN
+    delay(50); // thời gian trễ giữa các lần gửi và nhận dữ liệu CAN
     Receive_task(firebaseData, CAN);
     GPS_task();
   }
